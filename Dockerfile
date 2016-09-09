@@ -1,26 +1,11 @@
-FROM alpine:latest
+FROM kovagoz/php:5.6-mongo
 
 RUN set -ex \
 
-    # Install ruby
-    && apk add --no-cache --virtual .deps ruby \
+    && curl -Ls https://github.com/bobthecow/genghis/archive/v2.3.11.zip > /tmp/genghis.zip \
+    && unzip /tmp/genghis.zip genghis-2.3.11/genghis.php -p > genghis.php \
+    && rm /tmp/genghis.zip
 
-    # Install dependencies to build the bson_ext gem
-    && apk add --no-cache --virtual .build-deps \
-        ruby-rake \
-        ruby-libs \
-        ruby-dev \
-        musl-dev \
-        gcc \
-        make \
+ENTRYPOINT php -S 0.0.0.0:8000 -d date.timezone=${TIMEZONE:-Europe/Budapest} genghis.php
 
-    # Install Genghis
-    && gem install --no-ri --no-rdoc bson_ext:'~>1.9.0' genghisapp \
-
-    # Remove build dependencies
-    && apk del .build-deps
-
-CMD genghisapp --foreground --no-launch --no-update-check --servers ${DB_HOST}:${DB_PORT:-27017}
-
-EXPOSE 5678
-
+EXPOSE 8000
